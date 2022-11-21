@@ -3,7 +3,8 @@ import tempfile
 import boto3
 import uuid
 from urllib.parse import unquote_plus
-from s3img import imgtool
+import imgtool
+import magic
 
 s3_client = boto3.client("s3")
 
@@ -15,10 +16,16 @@ def lambda_handler(event, context):
         key = unquote_plus(record["s3"]["object"]["key"])
         tmpkey = key.replace("/", "")
         download_path = "/tmp/{}{}".format(uuid.uuid4(), tmpkey)
+        content_type = magic.from_file(download_path, mime=True)
         s3_client.download_file(bucket, key, download_path)
         with tempfile.TemporaryDirectory() as dir:
             images = imgtool.make_thumbnails(
                 pathlib.Path(download_path), heights, pathlib.Path(dir)
             )
             for img_path in images:
-                s3_client.upload_file(str(img_path), "{}-resized".format(bucket), key)
+                s3_client.upload_file(
+                    str(img_path),
+                    "{}-resized".format(bucket),
+                    img_path.name,
+                    ExtraArgs={"ContentType": content_type},
+                )
