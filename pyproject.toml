@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "sam-s3-img-resize-lambda"
+version = "0.1.0"
+description = ""
+authors = ["Ben <ben@ahnlab.io>"]
+readme = "README.md"
+packages = [{include = "sam_s3_img_resize_lambda"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+boto3 = "^1.26.13"
+python-dotenv = "^0.21.0"
+types-boto3 = "^1.0.2"
+boto3-stubs = "^1.26.13"
+pillow = "^9.3.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.15.6"
+mypy = "^0.991"
+flake8 = "^5.0.4"
+black = "^22.10.0"
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
