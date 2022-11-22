@@ -1,12 +1,16 @@
+import logging
 import pathlib
 import tempfile
 import boto3
 import uuid
 from urllib.parse import unquote_plus
 import imgtool
-import magic
+import mimetypes
 
 s3_client = boto3.client("s3")
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
@@ -16,8 +20,13 @@ def lambda_handler(event, context):
         key = unquote_plus(record["s3"]["object"]["key"])
         tmpkey = key.replace("/", "")
         download_path = "/tmp/{}{}".format(uuid.uuid4(), tmpkey)
-        content_type = magic.from_file(download_path, mime=True)
         s3_client.download_file(bucket, key, download_path)
+
+        mime_type, _ = mimetypes.guess_type(download_path)
+        if mime_type is None or not mime_type.startswith("image/"):
+            log.info("mimetype=%s. skip.", mime_type)
+            return
+
         with tempfile.TemporaryDirectory() as dir:
             images = imgtool.make_thumbnails(
                 pathlib.Path(download_path), heights, pathlib.Path(dir)
@@ -27,5 +36,5 @@ def lambda_handler(event, context):
                     str(img_path),
                     "{}-resized".format(bucket),
                     img_path.name,
-                    ExtraArgs={"ContentType": content_type},
+                    ExtraArgs={"ContentType": mime_type},
                 )
