@@ -65,7 +65,7 @@ def resize_image(
 def resize_img(image, height, target_filepath):
     ratio = height / image.height
     img_resize = image.resize(
-        (int(image.width * ratio), int(image.height * ratio)), Image.LANCZOS
+        (int(image.width * ratio), int(image.height * ratio)), Image.Resampling.LANCZOS
     )
     img_resize.save(target_filepath, image.format, quality=95)
 
@@ -79,8 +79,10 @@ def resize_animation(image, height, target_filepath):
         # https://pillow.readthedocs.io/en/stable/handbook/concepts.html#PIL.Image.NEAREST
         for frame in frames:
             thumbnail = frame.copy()
-            # thumbnail.thumbnail(size, Image.LANCZOS) # best quality
-            thumbnail.thumbnail(size, Image.NEAREST)  # low quality, high performance
+            # thumbnail.thumbnail(size, Image.Resampling.LANCZOS) # best quality
+            thumbnail.thumbnail(
+                size, Image.Resampling.NEAREST
+            )  # low quality, high performance
             yield thumbnail
 
     frames = thumbnails(frames)
@@ -88,4 +90,4 @@ def resize_animation(image, height, target_filepath):
     # Save output
     om = next(frames)  # Handle first frame separately
     om.info = image.info  # Copy sequence info
-    om.save(target_filepath, save_all=True, append_images=list(frames), quality=20)
+    om.save(target_filepath, save_all=True, append_images=frames)
